@@ -1,0 +1,10 @@
+{
+  "name": "orca",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix FrontEnd run dev",
+    "start": "npm --prefix FrontEnd start",
+    "serve": "npm --prefix FrontEnd run serve"
+  }
+}

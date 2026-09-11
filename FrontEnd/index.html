@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORCA — Marine Ecosystem Reasoning with Collaborative Agents | Andhra Pradesh Coastal Safety</title>
+  <meta name="description" content="AI-powered marine safety assistant for coastal fisherfolk in Andhra Pradesh. Real-time Potential Fishing Zones (PFZ), weather conditions, hazard alerts, and maritime boundaries.">
+
+  <!-- Typography: Anek Telugu, Bricolage Grotesque, Instrument Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Telugu:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/leaflet.css">
+  <link rel="stylesheet" href="styles/orca.css?v=nexus_fixed_header_v4">
+</head>
+<body>
+
+  <!-- Full-Bleed WebGL Ocean Volumetric Background Field -->
+  <div class="ocean-canvas-container" aria-hidden="true">
+    <canvas id="terrain-canvas"></canvas>
+    <div class="ocean-overlay-vignette"></div>
+  </div>
+
+  <!-- Main Feature Navigation Header -->
+  <header class="orca-nav">
+    <!-- Brand -->
+    <a href="#" class="orca-brand" onclick="window.switchView('landing'); return false;">
+      <div class="orca-logo-badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M2 12c5-4 9-4 14 0 3-2 5-2 6-1-1 4-3 7-6 8-5 2-9 0-14-7z"/>
+          <circle cx="17" cy="11" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="orca-brand-text">
+        <div class="orca-brand-name">ORCA <span class="degree">°</span></div>
+        <div class="orca-brand-sub">Marine Safety Assistant • AP Coast</div>
+      </div>
+    </a>
+
+    <!-- Primary Feature Navigation Bar (Chat Bot, Map, Alerts, Evidence, Overview) with Morphicons -->
+    <nav class="orca-nav-tabs" aria-label="Feature Navigation">
+      <button id="tab-btn-landing" class="nav-tab-btn tab-active">
+        <span class="morphicon-slot" data-morphicon="home" data-morph-size="15"></span>
+        <span data-i18n="nav_overview">Overview</span>
+      </button>
+      <button id="tab-btn-chat" class="nav-tab-btn">
+        <span class="morphicon-slot" data-morphicon="chat" data-morph-size="15"></span>
+        <span data-i18n="nav_chatbot">AI Chatbot</span>
+      </button>
+      <button id="tab-btn-map" class="nav-tab-btn">
+        <span class="morphicon-slot" data-morphicon="map" data-morph-size="15"></span>
+        <span data-i18n="nav_map">Marine Map</span>
+      </button>
+      <button id="tab-btn-alerts" class="nav-tab-btn">
+        <span class="morphicon-slot" data-morphicon="alert" data-morph-size="15"></span>
+        <span data-i18n="nav_alerts">Alerts</span>
+        <span class="badge-count">3</span>
+      </button>
+      <button id="tab-btn-evidences" class="nav-tab-btn">
+        <span class="morphicon-slot" data-morphicon="evidence" data-morph-size="15"></span>
+        <span data-i18n="nav_evidences">Evidences</span>
+      </button>
+    </nav>
+
+    <!-- Right Controls: Language Toggle, Port Selector & GPS Coordinates -->
+    <div class="orca-nav-controls">
+      
+      <!-- Language Toggle Switch (EN / తెలుగు) -->
+      <div class="orca-lang-switch" id="lang-switch-container" aria-label="Language Selector">
+        <button id="lang-btn-en" class="lang-toggle-btn lang-active" data-lang="en">EN</button>
+        <button id="lang-btn-te" class="lang-toggle-btn" data-lang="te">తెలుగు</button>
+      </div>
+
+      <div class="orca-port-selector">
+        <span class="morphicon-slot" data-morphicon="location" data-morph-size="14" style="color: var(--orca-primary);"></span>
+        <span data-i18n="base_port_label">Base Port:</span>
+        <select id="port-select" aria-label="Select Andhra Pradesh Port">
+          <option value="visakhapatnam" selected>Visakhapatnam Harbor</option>
+          <option value="kakinada">Kakinada Fishery Port</option>
+          <option value="machilipatnam">Machilipatnam Coast</option>
+          <option value="nizampatnam">Nizampatnam Harbor</option>
+        </select>
+      </div>
+
+      <div style="font-family: var(--orca-font-mono); font-size: 11px; color: var(--orca-primary); display: flex; align-items: center; gap: 6px;">
+        <span class="pulse-dot"></span>
+        <span id="header-gps-coords">17.65° N, 83.28° E</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Glowing Scroll Progress Line Indicator -->
+  <div id="orca-scroll-progress" class="orca-scroll-progress-line" aria-hidden="true"></div>
+
+  <!-- View Container -->
+  <main class="view-container">
+
+    <!-- ====================================================================
+         VIEW 1: MARKETING & EXPLAINABILITY LANDING PAGE (#view-landing)
+         ==================================================================== -->
+    <div id="view-landing" class="view-section active-view">
+      
+      <!-- Hero Section -->
+      <section class="landing-hero">
+        <div class="hero-main-row">
+          <div class="hero-content">
+            <div class="hero-pill-badge">
+              <span class="pulse-dot"></span>
+              <span data-i18n="hero_badge">Marine Ecosystem Reasoning • PS 26176</span>
+            </div>
+
+            <h1 class="hero-headline">
+              <span class="highlight" data-i18n="hero_h1_highlight">Know the Sea</span>
+              <span data-i18n="hero_h1_rest">Before You Sail.</span>
+            </h1>
+
+            <p class="hero-subheadline" data-i18n="hero_sub">
+              ORCA gives Andhra Pradesh's coastal fisherfolk real-time, explainable guidance on Potential Fishing Zones (PFZ), ocean weather, and hazard warnings — in your own language.
+            </p>
+
+            <div class="hero-actions">
+              <!-- Primary CTA routes directly into the Chatbot View -->
+              <button id="hero-launch-orca-btn" class="hero-cta-btn" onclick="window.switchView('chat')">
+                <span class="morphicon-slot" data-morphicon="chat" data-morph-size="16"></span>
+                <span data-i18n="hero_cta">Ask ORCA Chatbot</span>
+                <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="14"></span>
+              </button>
+              <!-- Secondary Action routes into Map View -->
+              <button id="hero-launch-map-btn" class="hero-secondary-btn" onclick="window.switchView('map')">
+                <span class="morphicon-slot" data-morphicon="map" data-morph-size="15"></span>
+                <span data-i18n="hero_map_btn">Explore Marine Map</span>
+              </button>
+              <!-- Active Language Status Pill -->
+              <div class="telugu-support-tag">
+                <span class="morphicon-slot" data-morphicon="globe" data-morph-size="13" style="color: var(--orca-primary);"></span>
+                <span data-i18n="telugu_support">English Language Guidance Active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Coastal Conditions Snapshot Card -->
+          <aside class="hero-conditions-snapshot" aria-label="Current Marine Conditions">
+            <div class="snapshot-header">
+              <div id="snapshot-port-title" class="snapshot-title" data-i18n="snap_port_title">COASTAL CONDITIONS • VISAKHAPATNAM</div>
+              <div id="snapshot-verdict" class="verdict-badge verdict-caution">
+                <span class="morphicon-slot" data-morphicon="warning" data-morph-size="14" style="color: var(--orca-secondary);"></span>
+                <span data-i18n="verdict_caution">CAUTION</span>
+              </div>
+            </div>
+
+            <div class="snapshot-grid">
+              <div class="snapshot-metric">
+                <div class="metric-label">
+                  <span class="morphicon-slot" data-morphicon="wind" data-morph-size="14" style="color: var(--orca-primary);"></span>
+                  <span data-i18n="snap_wind_label">Wind Speed</span>
+                </div>
+                <div id="metric-wind-val" class="metric-value" data-i18n="snap_wind_val">14 kts ENE</div>
+                <div id="metric-wind-sub" class="metric-sub" data-i18n="snap_wind_sub">Moderate Breeze</div>
+              </div>
+              <div class="snapshot-metric">
+                <div class="metric-label">
+                  <span class="morphicon-slot" data-morphicon="wave" data-morph-size="14" style="color: var(--orca-primary);"></span>
+                  <span data-i18n="snap_waves_label">Wave Height</span>
+                </div>
+                <div id="metric-waves-val" class="metric-value" data-i18n="snap_waves_val">1.8m swell</div>
+                <div id="metric-waves-sub" class="metric-sub" data-i18n="snap_waves_sub">Spring Tide Active</div>
+              </div>
+              <div class="snapshot-metric">
+                <div class="metric-label">
+                  <span class="morphicon-slot" data-morphicon="temp" data-morph-size="14" style="color: var(--orca-secondary);"></span>
+                  <span data-i18n="snap_temp_label">Sea Surface Temp</span>
+                </div>
+                <div id="metric-temp-val" class="metric-value" data-i18n="snap_temp_val">28.3 °C</div>
+                <div id="metric-temp-sub" class="metric-sub" data-i18n="snap_temp_sub">Optimal Thermal Front</div>
+              </div>
+              <div class="snapshot-metric">
+                <div class="metric-label">
+                  <span class="morphicon-slot" data-morphicon="compass" data-morph-size="14" style="color: var(--orca-tertiary);"></span>
+                  <span data-i18n="snap_boundary_label">Boundary Status</span>
+                </div>
+                <div id="metric-boundary-val" class="metric-value" data-i18n="snap_boundary_val">114 NM Clear</div>
+                <div id="metric-boundary-sub" class="metric-sub" data-i18n="snap_boundary_sub">Inside Indian EEZ</div>
+              </div>
+            </div>
+
+            <div id="snapshot-reasoning" class="snapshot-reasoning">
+              <strong>Advisory:</strong> <span data-i18n="snap_advisory">Safe for motorized & mechanized vessels up to 15 NM. Non-motorized catamarans advised to stay within 5 NM due to swell near Godavari spit.</span>
+            </div>
+
+            <div class="snapshot-footer">
+              <span data-i18n="snap_data_footer">Data: INCOIS & IMD</span>
+              <span data-i18n="snap_refresh_footer">Refreshed 12m ago</span>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Scroll Hint Anchor to smoothly explore workflow below -->
+        <div class="hero-scroll-hint" onclick="document.getElementById('landing-workflow').scrollIntoView({behavior: 'smooth'})">
+          <span data-i18n="how_tag">Workflow & Usability</span>
+          <span class="morphicon-slot" data-morphicon="chevron_down" data-morph-size="12"></span>
+        </div>
+      </section>
+
+      <!-- Section: How It Works -->
+      <section id="landing-workflow" class="landing-section">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="how_tag">Workflow & Usability</span>
+          <h2 class="section-heading" data-i18n="how_h2">Ask a question. Get a clear answer, backed by real data.</h2>
+          <p class="section-subheading" data-i18n="how_sub">Designed for coastal fisherfolk to make complex marine science immediately understandable before leaving harbor.</p>
+        </div>
+
+        <div class="how-it-works-grid">
+          <div class="how-card" onclick="window.switchView('chat')" style="cursor:pointer;">
+            <div class="how-number">1</div>
+            <h3 class="how-title" style="display: flex; align-items: center; justify-content: space-between;">
+              <span data-i18n="how_step1_title">Ask in your language</span>
+              <span class="morphicon-slot" data-morphicon="chat" data-morph-size="18" style="color: var(--orca-primary);"></span>
+            </h3>
+            <p class="how-desc" data-i18n="how_step1_desc">Type or speak questions in plain language directly into the AI chatbot. Clean, intuitive, and non-technical.</p>
+            <div class="how-vernacular" data-i18n="how_step1_sub">Natural conversational guidance</div>
+          </div>
+
+          <div class="how-card" onclick="window.switchView('map')" style="cursor:pointer;">
+            <div class="how-number">2</div>
+            <h3 class="how-title" style="display: flex; align-items: center; justify-content: space-between;">
+              <span data-i18n="how_step2_title">See it on the map</span>
+              <span class="morphicon-slot" data-morphicon="map" data-morph-size="18" style="color: var(--orca-tertiary);"></span>
+            </h3>
+            <p class="how-desc" data-i18n="how_step2_desc">Live Potential Fishing Zones (PFZ), wave heights, cyclone cones, and the International Maritime Boundary Line (IMBL) rendered with clear colors.</p>
+            <div class="how-vernacular" data-i18n="how_step2_sub">Real-time visual maritime map</div>
+          </div>
+
+          <div class="how-card" onclick="window.switchView('evidences')" style="cursor:pointer;">
+            <div class="how-number">3</div>
+            <h3 class="how-title" style="display: flex; align-items: center; justify-content: space-between;">
+              <span data-i18n="how_step3_title">Know why & sail safely</span>
+              <span class="morphicon-slot" data-morphicon="evidence" data-morph-size="18" style="color: var(--orca-safe);"></span>
+            </h3>
+            <p class="how-desc" data-i18n="how_step3_desc">Every AI recommendation displays an expandable Evidence Drawer with the exact satellite telemetry and weather bulletins used.</p>
+            <div class="how-vernacular" data-i18n="how_step3_sub">Traceable satellite & radar telemetry</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: 8 Sample Query Showcase Chips with Morphicons -->
+      <section class="landing-section">
+        <div class="section-header">
+          <span class="section-tag" data-i18n="query_sec_tag">Instant Answers</span>
+          <h2 class="section-heading" data-i18n="query_sec_h2">Try asking ORCA questions like:</h2>
+          <p class="section-subheading" data-i18n="query_sec_sub">Tap any query below to launch directly into the live Chatbot with pre-calculated geospatial reasoning.</p>
+        </div>
+
+        <div class="query-chips-grid">
+          <div class="query-chip-card" data-query="Where are the best fishing zones near me today?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="fish" data-morph-size="16"></span>
+              <span class="query-chip-text">Where are the best fishing zones near me today?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="Is it safe to go out to sea right now?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="warning" data-morph-size="16"></span>
+              <span class="query-chip-text">Is it safe to go out to sea right now?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="Show me the nearest PFZ">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="location" data-morph-size="16"></span>
+              <span class="query-chip-text">Show me the nearest PFZ</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="Are there any cyclone alerts nearby?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="cyclone" data-morph-size="16"></span>
+              <span class="query-chip-text">Are there any cyclone alerts nearby?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="How far am I from the IMBL?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="flag" data-morph-size="16"></span>
+              <span class="query-chip-text">How far am I from the IMBL?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="What's the wave height near my location?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="wave" data-morph-size="16"></span>
+              <span class="query-chip-text">What's the wave height near my location?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="Plan a safe route to the fishing zone">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="route" data-morph-size="16"></span>
+              <span class="query-chip-text">Plan a safe route to the fishing zone</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+
+          <div class="query-chip-card" data-query="Any lightning warnings for today?">
+            <div class="query-chip-left">
+              <span class="query-chip-icon" data-morphicon="lightning" data-morph-size="16"></span>
+              <span class="query-chip-text">Any lightning warnings for today?</span>
+            </div>
+            <span class="query-chip-action">
+              <span data-i18n="query_ask_action">Ask in Chat</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="13"></span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Explainability & Trust -->
+      <section class="landing-section">
+        <div class="explain-card">
+          <div class="explain-left">
+            <span class="section-tag" data-i18n="explain_tag">Traceability & Rigor</span>
+            <h3 data-i18n="explain_h3">Every answer, fully explained.</h3>
+            <p data-i18n="explain_desc">
+              ORCA never produces an unverified recommendation. Every safety verdict and fishing zone suggestion is cross-checked across real-time satellite oceanography, Indian Meteorological Department radar sweeps, and Coast Guard boundary geofences.
+            </p>
+            <button class="hero-secondary-btn" onclick="window.switchView('evidences')">
+              <span class="morphicon-slot" data-morphicon="evidence" data-morph-size="16"></span>
+              <span data-i18n="explain_btn">View Data Sources & Audits</span>
+            </button>
+          </div>
+
+          <div class="explain-sources-list">
+            <div class="source-item">
+              <div class="source-badge">INCOIS</div>
+              <div>
+                <div class="source-name">Oceansat-3 OCM & AVHRR Satellite Feeds</div>
+                <div style="font-size: 11px; color: #9cb1a6;">Chlorophyll-a front mapping & Sea Surface Temperature</div>
+              </div>
+              <div class="source-freq">4× Daily</div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-badge">IMD</div>
+              <div>
+                <div class="source-name">Regional Cyclone Warning Centre & DWR Radar</div>
+                <div style="font-size: 11px; color: #9cb1a6;">Squall vectors, deep depression tracks & lightning nowcasts</div>
+              </div>
+              <div class="source-freq">Live Hourly</div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-badge">ICG</div>
+              <div>
+                <div class="source-name">Indian Coast Guard Maritime Boundary System</div>
+                <div style="font-size: 11px; color: #9cb1a6;">IMBL, EEZ perimeter & Marine Protected Area (MPA) boundaries</div>
+              </div>
+              <div class="source-freq">WGS-84 Live</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="orca-footer">
+        <div>
+          <strong data-i18n="footer_tag">ORCA — Built for the coastal fisherfolk of Andhra Pradesh • Smart India Hackathon 2026 (PS 26176)</strong>
+        </div>
+        <div class="footer-links">
+          <a href="#" onclick="window.switchView('chat'); return false;" data-i18n="nav_chatbot">AI Chatbot</a>
+          <a href="#" onclick="window.switchView('map'); return false;" data-i18n="nav_map">Marine Map</a>
+          <a href="#" onclick="window.switchView('alerts'); return false;" data-i18n="nav_alerts">Alerts</a>
+          <a href="#" onclick="window.switchView('evidences'); return false;" data-i18n="nav_evidences">Evidences</a>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 2: DEDICATED AI CHATBOT VIEW (#view-chat)
+         ==================================================================== -->
+    <div id="view-chat" class="view-section">
+      <div class="chatbot-page-layout">
+        
+        <!-- Welcoming Header Banner -->
+        <div class="chatbot-welcome-banner">
+          <div class="chatbot-welcome-badge">
+            <span class="pulse-dot"></span>
+            <span data-i18n="chat_welcome_badge">COLLABORATIVE REASONING AGENTS ACTIVE</span>
+          </div>
+          <h2 class="chatbot-welcome-title" data-i18n="chat_welcome_title">How can ORCA help you sail safely today?</h2>
+          <div class="chatbot-welcome-telugu" data-i18n="chat_welcome_sub" style="color: var(--orca-primary); font-size: 13.5px; margin-bottom: 16px;">Ask about fishing zones, wave conditions, weather, or boundary alerts.</div>
+        </div>
+
+        <!-- Conversational Message Thread -->
+        <div id="chat-thread" class="chatbot-thread-container">
+          
+          <div class="message-bubble message-assistant">
+            <!-- Dynamically populated by orcaChat.renderInitialAdvisory() in pure language with Morphicons -->
+          </div>
+
+        </div>
+
+        <!-- Quick Query Action Chips Row with Morphicons -->
+        <div class="quick-chips-row" style="margin-bottom: 12px; border-radius: var(--orca-r-md);">
+          <button class="quick-chip" data-query="Where are the best fishing zones near me today?">
+            <span class="morphicon-slot" data-morphicon="fish" data-morph-size="15"></span>
+            <span>Best Fishing Zones</span>
+          </button>
+          <button class="quick-chip" data-query="Is it safe to go out to sea right now?">
+            <span class="morphicon-slot" data-morphicon="warning" data-morph-size="15"></span>
+            <span>Is it Safe to Sail?</span>
+          </button>
+          <button class="quick-chip" data-query="Show me the nearest PFZ">
+            <span class="morphicon-slot" data-morphicon="location" data-morph-size="15"></span>
+            <span>Nearest PFZ</span>
+          </button>
+          <button class="quick-chip" data-query="Are there any cyclone alerts nearby?">
+            <span class="morphicon-slot" data-morphicon="cyclone" data-morph-size="15"></span>
+            <span>Cyclone Alerts</span>
+          </button>
+          <button class="quick-chip" data-query="How far am I from the IMBL?">
+            <span class="morphicon-slot" data-morphicon="flag" data-morph-size="15"></span>
+            <span>Distance to IMBL</span>
+          </button>
+          <button class="quick-chip" data-query="What's the wave height near my location?">
+            <span class="morphicon-slot" data-morphicon="wave" data-morph-size="15"></span>
+            <span>Wave Height</span>
+          </button>
+          <button class="quick-chip" data-query="Plan a safe route to the fishing zone">
+            <span class="morphicon-slot" data-morphicon="route" data-morph-size="15"></span>
+            <span>Plan Safe Route</span>
+          </button>
+          <button class="quick-chip" data-query="Any lightning warnings for today?">
+            <span class="morphicon-slot" data-morphicon="lightning" data-morph-size="15"></span>
+            <span>Lightning Alerts</span>
+          </button>
+        </div>
+
+        <!-- Prominent Chatbot Input Box -->
+        <div class="chatbot-input-wrapper">
+          <div class="chatbot-input-row">
+            <button id="mic-voice-btn" class="mic-voice-btn" title="Voice Input Simulation" aria-label="Voice Input">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+
+            <input type="text" id="chat-main-input" class="chatbot-main-input" data-i18n-placeholder="chat_placeholder" placeholder="Ask ORCA in plain English (e.g., Where are the best fishing zones today?)..." aria-label="Ask ORCA chatbot">
+
+            <button id="chat-main-send-btn" class="chatbot-send-btn" aria-label="Send query">
+              <span data-i18n="chat_send_btn">Send</span>
+              <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="14"></span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 3: DEDICATED FULL-SCREEN MARINE MAP VIEW (#view-map)
+         ==================================================================== -->
+    <div id="view-map" class="view-section">
+      <div class="map-viewport-container" style="height: calc(100vh - 65px);">
+        <!-- Interactive Leaflet Map Base (Google Maps Engine) -->
+        <div id="orca-leaflet-map"></div>
+
+        <!-- Google Maps-Style Top Floating Bar -->
+        <div class="gmap-top-bar">
+          <div class="gmap-search-box">
+            <div class="gmap-search-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <input type="text" id="gmap-search-input" placeholder="Search Andhra Pradesh ports, fishing zones, or coords..." aria-label="Search map places" autocomplete="off" />
+            <button id="gmap-search-clear" class="gmap-search-clear hidden" title="Clear search">✕</button>
+            <div class="gmap-search-divider"></div>
+            <button id="gmap-recenter-search-btn" class="gmap-search-action-btn" title="Center on My Boat">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2.2">
+                <circle cx="12" cy="12" r="7"/>
+                <circle cx="12" cy="12" r="2" fill="#1a73e8"/>
+                <line x1="12" y1="1" x2="12" y2="5"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="1" y1="12" x2="5" y2="12"/>
+                <line x1="19" y1="12" x2="23" y2="12"/>
+              </svg>
+            </button>
+            <div id="gmap-search-dropdown" class="gmap-search-dropdown hidden"></div>
+          </div>
+
+          <!-- Google Maps Filter Chips -->
+          <div class="gmap-filter-chips">
+            <button class="gmap-chip gmap-chip-active" data-layer="pfz" id="chip-pfz">
+              <span class="gmap-chip-dot dot-green"></span>
+              <span data-i18n="toggle_pfz">Fishing Zones (PFZ)</span>
+            </button>
+            <button class="gmap-chip gmap-chip-active" data-layer="hazard" id="chip-hazard">
+              <span class="gmap-chip-dot dot-amber"></span>
+              <span data-i18n="toggle_hazard">Cyclone & Waves</span>
+            </button>
+            <button class="gmap-chip gmap-chip-active" data-layer="imbl" id="chip-imbl">
+              <span class="gmap-chip-dot dot-red"></span>
+              <span data-i18n="toggle_imbl">IMBL Border</span>
+            </button>
+            <button class="gmap-chip gmap-chip-active" data-layer="route" id="chip-route">
+              <span class="gmap-chip-dot dot-blue"></span>
+              <span data-i18n="toggle_route">Safe Route</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Maps Map Type Toggle (Map / Satellite / Terrain) -->
+        <div class="gmap-type-selector">
+          <button class="gmap-type-btn active" data-type="roadmap" title="Google Standard Map">
+            <span class="gmap-type-icon">🗺️</span>
+            <span>Map</span>
+          </button>
+          <button class="gmap-type-btn" data-type="satellite" title="Google Satellite Imagery">
+            <span class="gmap-type-icon">🛰️</span>
+            <span>Satellite</span>
+          </button>
+          <button class="gmap-type-btn" data-type="terrain" title="Google Terrain with Bathymetry">
+            <span class="gmap-type-icon">⛰️</span>
+            <span>Terrain</span>
+          </button>
+        </div>
+
+        <!-- Google Maps Floating Right-Side Controls (Zoom & My Location) -->
+        <div class="gmap-floating-controls">
+          <div class="gmap-control-group">
+            <button id="gmap-zoom-in" class="gmap-btn" title="Zoom in" aria-label="Zoom in">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <div class="gmap-btn-divider"></div>
+            <button id="gmap-zoom-out" class="gmap-btn" title="Zoom out" aria-label="Zoom out">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+
+          <button id="gmap-recenter-btn" class="gmap-btn gmap-btn-standalone" title="Center on My Boat" aria-label="Center on My Boat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2.2">
+              <circle cx="12" cy="12" r="7"/>
+              <circle cx="12" cy="12" r="2" fill="#1a73e8"/>
+              <line x1="12" y1="1" x2="12" y2="5"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="1" y1="12" x2="5" y2="12"/>
+              <line x1="19" y1="12" x2="23" y2="12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Google Maps-Style Route Info Ribbon -->
+        <div id="gmap-route-ribbon" class="gmap-route-ribbon">
+          <div class="route-ribbon-icon">🧭</div>
+          <div class="route-ribbon-info">
+            <div class="route-ribbon-title">Safe Transit Corridor: Vizag Harbor → PFZ-01</div>
+            <div class="route-ribbon-meta">32 km (17.3 NM) • ~1 hr 45 min • Clear of Cyclone & Swell Hazards</div>
+          </div>
+        </div>
+
+        <!-- Google Maps-Style Floating Place Detail Card (Bottom-Left) -->
+        <div id="map-zone-popup" class="gmap-place-card hidden">
+          <!-- Populated dynamically by window.orcaMap.updatePlaceCard() -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 4: DEDICATED MARITIME SAFETY ALERTS FEED (#view-alerts)
+         ==================================================================== -->
+    <div id="view-alerts" class="view-section">
+      <div class="alerts-page-layout">
+        
+        <div class="alerts-header">
+          <div class="section-tag" data-i18n="alerts_tag">Active Maritime Warnings</div>
+          <h2 class="section-heading" data-i18n="alerts_h2">Andhra Pradesh Coastal Hazard Bulletins</h2>
+          <p class="section-subheading" data-i18n="alerts_sub">Verified bulletins from IMD Regional Cyclone Warning Centre & INCOIS Early Warning Systems.</p>
+        </div>
+
+        <!-- Critical High-Priority Banner with Morphicon -->
+        <div class="alerts-banner-critical">
+          <span class="morphicon-slot" data-morphicon="warning" data-morph-size="28" style="color: var(--orca-secondary); margin-top: 2px;"></span>
+          <div>
+            <div style="font-family: var(--orca-font-display); font-size: 17px; font-weight: 600; color: #ffffff; margin-bottom: 4px;" data-i18n="alert_banner_title">
+              CRITICAL SWELL SURGE ALERT • GODAVARI DELTA TO KAKINADA
+            </div>
+            <div style="font-size: 13px; line-height: 1.5; color: #f0f5f2;" data-i18n="alert_banner_desc">
+              Spring tide swell heights reaching <strong>2.8m to 3.4m</strong>. Traditional non-motorized catamarans and country craft are strongly advised not to venture into deep sea beyond 5 nautical miles.
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Alert Cards Grid with Morphicons -->
+        <div class="alerts-grid">
+          
+          <div class="alert-card-detailed">
+            <div class="alert-card-header">
+              <span class="alert-severity-badge severity-medium" data-i18n="alert1_badge">Caution</span>
+              <span style="font-family: var(--orca-font-mono); font-size: 10px; color: var(--orca-text-dim);">IMD-RCWC-04</span>
+            </div>
+            <h3 class="alert-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="morphicon-slot" data-morphicon="cyclone" data-morph-size="18" style="color: var(--orca-secondary);"></span>
+              <span data-i18n="alert1_title">Bay of Bengal Deep Depression</span>
+            </h3>
+            <div class="alert-card-body" data-i18n="alert1_body">
+              Centered near 16.4°N, 84.5°E (~120 km offshore). Squally winds of 45–55 km/h gusting to 65 km/h expected in offshore waters. Port cautionary signal #3 hoisted.
+            </div>
+            <div class="alert-meta-footer">
+              <span data-i18n="alert1_source">Source: IMD RCWC Amaravati</span>
+              <span data-i18n="alert1_valid">Valid: Today 23:59 IST</span>
+            </div>
+          </div>
+
+          <div class="alert-card-detailed">
+            <div class="alert-card-header">
+              <span class="alert-severity-badge severity-high" data-i18n="alert2_badge">Warning</span>
+              <span style="font-family: var(--orca-font-mono); font-size: 10px; color: var(--orca-danger);">INCOIS-SWELL-09</span>
+            </div>
+            <h3 class="alert-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="morphicon-slot" data-morphicon="wave" data-morph-size="18" style="color: var(--orca-danger);"></span>
+              <span data-i18n="alert2_title">High Wave Surge Advisory</span>
+            </h3>
+            <div class="alert-card-body" data-i18n="alert2_body">
+              Wave period 8–10 seconds with steep cresting breakers near river mouths. Nearshore operations should exercise extreme vigilance during low-to-high tide transition.
+            </div>
+            <div class="alert-meta-footer">
+              <span data-i18n="alert2_source">Source: INCOIS Moored Buoy Network</span>
+              <span data-i18n="alert2_valid">Valid: Next 18 Hours</span>
+            </div>
+          </div>
+
+          <div class="alert-card-detailed">
+            <div class="alert-card-header">
+              <span class="alert-severity-badge severity-info" data-i18n="alert3_badge">Advisory</span>
+              <span style="font-family: var(--orca-font-mono); font-size: 10px; color: var(--orca-primary);">DWR-LIGHTNING-12</span>
+            </div>
+            <h3 class="alert-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="morphicon-slot" data-morphicon="lightning" data-morph-size="18" style="color: var(--orca-secondary);"></span>
+              <span data-i18n="alert3_title">Afternoon Thundersqualls</span>
+            </h3>
+            <div class="alert-card-body" data-i18n="alert3_body">
+              Doppler radar indicates convective cloud tops up to 11 km over northern coastal AP. Fishermen in open fiber boats should conclude operations before 16:00 IST.
+            </div>
+            <div class="alert-meta-footer">
+              <span data-i18n="alert3_source">Source: DWR Visakhapatnam Radar</span>
+              <span data-i18n="alert3_valid">Valid: 15:30 – 19:00 IST</span>
+            </div>
+          </div>
+
+          <div class="alert-card-detailed">
+            <div class="alert-card-header">
+              <span class="alert-severity-badge severity-info" data-i18n="alert4_badge">Territorial</span>
+              <span style="font-family: var(--orca-font-mono); font-size: 10px; color: var(--orca-primary);">ICG-IMBL-ZONE</span>
+            </div>
+            <h3 class="alert-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="morphicon-slot" data-morphicon="flag" data-morph-size="18" style="color: var(--orca-primary);"></span>
+              <span data-i18n="alert4_title">International Border Geofence</span>
+            </h3>
+            <div class="alert-card-body" data-i18n="alert4_body">
+              All vessels operating from Visakhapatnam and Kakinada must maintain a minimum 15 nautical mile buffer from the IMBL datum. Indian Coast Guard patrols are monitoring VHF Ch 16.
+            </div>
+            <div class="alert-meta-footer">
+              <span data-i18n="alert4_source">Source: Indian Coast Guard HQ-06</span>
+              <span data-i18n="alert4_valid">Status: Active Geofence</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         VIEW 5: DEDICATED DATA EVIDENCE & AUDIT VIEW (#view-evidences)
+         ==================================================================== -->
+    <div id="view-evidences" class="view-section">
+      <div class="evidence-page-layout">
+        
+        <div class="section-header">
+          <span class="section-tag" data-i18n="ev_tag">Explainable AI & Trust Architecture</span>
+          <h2 class="section-heading" data-i18n="ev_h2">Data Feeds, Bulletins & Verification Sources</h2>
+          <p class="section-subheading" data-i18n="ev_sub">Every recommendation delivered by ORCA is traceable to authenticated national oceanographic and meteorological sensors.</p>
+        </div>
+
+        <div class="evidence-hero-box">
+          <div style="font-family: var(--orca-font-display); font-size: 20px; font-weight: 500; color: #ffffff; margin-bottom: 8px;" data-i18n="ev_zero_title">
+            Zero Black-Box Recommendations
+          </div>
+          <div style="font-size: 13.5px; line-height: 1.6; color: var(--orca-text-secondary); max-width: 780px;" data-i18n="ev_zero_desc">
+            ORCA uses collaborative multi-agent reasoning. Before answering any query about fishing zones or sail safety, specialized agents synthesize telemetry from Oceansat-3, AVHRR, Doppler weather radars, and Coast Guard boundary layers. If data is stale or conflicting, a caution warning is automatically issued.
+          </div>
+        </div>
+
+        <!-- Telemetry Data Sources Table -->
+        <div class="evidence-table-card">
+          <table class="evidence-table">
+            <thead>
+              <tr>
+                <th>Data Source</th>
+                <th>Sensor / Platform</th>
+                <th>Measured Parameter</th>
+                <th>Cadence</th>
+                <th>Latency</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color:#ffffff;">INCOIS</strong></td>
+                <td>Oceansat-3 OCM Sensor</td>
+                <td>Chlorophyll-a ocean concentration (mg/m³)</td>
+                <td>Every 6 Hours</td>
+                <td>18 mins</td>
+                <td><span style="color:#4ade80;">● Online (Live)</span></td>
+              </tr>
+              <tr>
+                <td><strong style="color:#ffffff;">NOAA / ISRO</strong></td>
+                <td>AVHRR & INSAT-3DR</td>
+                <td>Sea Surface Temperature (SST °C) Thermal Fronts</td>
+                <td>Hourly</td>
+                <td>12 mins</td>
+                <td><span style="color:#4ade80;">● Online (Live)</span></td>
+              </tr>
+              <tr>
+                <td><strong style="color:#ffffff;">IMD</strong></td>
+                <td>Doppler Weather Radar (Vizag)</td>
+                <td>Precipitation reflectivity, squall velocity & lightning</td>
+                <td>Every 15 Mins</td>
+                <td>6 mins</td>
+                <td><span style="color:#4ade80;">● Online (Live)</span></td>
+              </tr>
+              <tr>
+                <td><strong style="color:#ffffff;">INCOIS Buoy</strong></td>
+                <td>Moored Wave Rider Buoy #23091</td>
+                <td>Significant wave height (H<sub>s</sub>), wave period & direction</td>
+                <td>Every 30 Mins</td>
+                <td>8 mins</td>
+                <td><span style="color:#4ade80;">● Online (Live)</span></td>
+              </tr>
+              <tr>
+                <td><strong style="color:#ffffff;">Coast Guard</strong></td>
+                <td>NHO Digital ENC Hydrographic Chart</td>
+                <td>IMBL Boundary, EEZ Coordinates & Marine Sanctuaries</td>
+                <td>Survey Datum</td>
+                <td>0 mins</td>
+                <td><span style="color:#4ade80;">● Verified WGS84</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Multi-Agent Collaborative Reasoning Architecture with Morphicons -->
+        <div class="section-header" style="margin-top: 40px;">
+          <span class="section-tag">Agentic Framework</span>
+          <h3 style="font-family: var(--orca-font-display); font-size: 22px; color: #ffffff; margin: 0 0 8px 0;">Collaborative Agent Architecture</h3>
+        </div>
+
+        <div class="agent-flow-grid">
+          <div class="agent-flow-card">
+            <div class="agent-flow-icon">
+              <span class="morphicon-slot" data-morphicon="shield" data-morph-size="24" style="color: var(--orca-primary);"></span>
+            </div>
+            <div class="agent-flow-title">1. Safety & Hazard Agent</div>
+            <div class="agent-flow-desc">Evaluates wind, swell, and cyclone cones against craft limitations (traditional catamarans vs mechanized boats).</div>
+          </div>
+
+          <div class="agent-flow-card">
+            <div class="agent-flow-icon">
+              <span class="morphicon-slot" data-morphicon="fish" data-morph-size="24" style="color: var(--orca-safe);"></span>
+            </div>
+            <div class="agent-flow-title">2. PFZ Oceanographic Agent</div>
+            <div class="agent-flow-desc">Cross-references thermal fronts with chlorophyll gradients to identify nutrient-rich pelagic fish aggregations.</div>
+          </div>
+
+          <div class="agent-flow-card">
+            <div class="agent-flow-icon">
+              <span class="morphicon-slot" data-morphicon="compass" data-morph-size="24" style="color: var(--orca-tertiary);"></span>
+            </div>
+            <div class="agent-flow-title">3. Geospatial Routing Agent</div>
+            <div class="agent-flow-desc">Calculates obstacle-free transit corridors keeping vessels away from shallow shoals, breakers, and the IMBL border.</div>
+          </div>
+
+          <div class="agent-flow-card">
+            <div class="agent-flow-icon">
+              <span class="morphicon-slot" data-morphicon="evidence" data-morph-size="24" style="color: var(--orca-secondary);"></span>
+            </div>
+            <div class="agent-flow-title">4. Explainability Agent</div>
+            <div class="agent-flow-desc">Attaches exact bulletin citations, timestamps, and verification sources so fisherfolk can verify every claim.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/landscape.js?v=terrain_revert"></script>
+  <script src="js/morphicons.js"></script>
+  <script src="js/leaflet.js"></script>
+  <script src="js/orca-i18n.js"></script>
+  <script src="js/orca-map.js"></script>
+  <script src="js/orca-chat.js"></script>
+  <script src="js/orca-app.js"></script>
+</body>
+</html>
