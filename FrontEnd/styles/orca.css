@@ -121,25 +121,20 @@ html, body {
   }
 }
 
-/* Action Chips & Horizontal Carousels: Clean borderless scroll with no track or buttons */
-.quick-chips-row,
+/* Action Chips & Horizontal Carousels: Google Maps Filter Chips */
 .gmap-filter-chips {
   scrollbar-width: none !important;
   -ms-overflow-style: none;
 }
 
-.quick-chips-row::-webkit-scrollbar,
 .gmap-filter-chips::-webkit-scrollbar,
-.quick-chips-row::-webkit-scrollbar-track,
 .gmap-filter-chips::-webkit-scrollbar-track,
-.quick-chips-row::-webkit-scrollbar-thumb,
 .gmap-filter-chips::-webkit-scrollbar-thumb {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
 
-.quick-chips-row::-webkit-scrollbar-button,
 .gmap-filter-chips::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;
@@ -347,33 +342,236 @@ html[lang="te"], [lang="te"] {
   box-shadow: 0 0 10px var(--orca-primary-glow);
 }
 
-/* Harbor Port Selector (Andhra Pradesh Ports) */
-.orca-port-selector {
-  display: flex;
+/* ==========================================================================
+   Harbor Port Custom Dropdown Selector (Andhra Pradesh Ports)
+   ========================================================================== */
+.orca-port-selector-wrapper {
+  position: relative;
+  display: inline-block;
+  overscroll-behavior: contain;
+}
+
+.orca-port-select-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Custom Glassmorphic Trigger Button */
+.orca-port-trigger {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: var(--orca-bg-input);
-  border: 1px solid var(--orca-border);
+  background: rgba(6, 16, 12, 0.82);
+  border: 1px solid rgba(159, 216, 189, 0.22);
   border-radius: var(--orca-r-full);
-  font-size: 12px;
+  font-family: var(--orca-font-body);
+  font-size: 12.5px;
+  color: var(--orca-text-secondary);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.orca-port-trigger:hover {
+  background: rgba(8, 22, 17, 0.92);
+  border-color: rgba(159, 216, 189, 0.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 14px rgba(159, 216, 189, 0.2);
+  transform: translateY(-1px);
+}
+
+.orca-port-trigger.is-open {
+  background: rgba(9, 26, 20, 0.95);
+  border-color: var(--orca-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 18px rgba(159, 216, 189, 0.3);
+}
+
+.orca-port-trigger:focus-visible {
+  outline: 2px solid var(--orca-primary);
+  outline-offset: 2px;
+}
+
+.port-trigger-label {
+  font-size: 11.5px;
+  color: var(--orca-text-dim);
+  font-weight: 500;
+}
+
+.port-trigger-current {
+  font-family: var(--orca-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.1px;
+}
+
+.port-trigger-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orca-primary);
+  margin-left: 2px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.orca-port-trigger.is-open .port-trigger-chevron {
+  transform: rotate(180deg);
+}
+
+/* Custom Glassmorphic Dropdown Menu */
+.orca-port-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 275px;
+  background: linear-gradient(165deg, rgba(8, 24, 18, 0.96) 0%, rgba(4, 14, 10, 0.98) 100%);
+  border: 1.5px solid rgba(159, 216, 189, 0.32);
+  border-radius: var(--orca-r-lg);
+  overscroll-behavior: contain;
+  box-shadow: 
+    0 16px 42px rgba(0, 0, 0, 0.75),
+    0 0 25px rgba(159, 216, 189, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 6px;
+  z-index: 1200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+}
+
+.orca-port-dropdown.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.port-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px 8px;
+  border-bottom: 1px solid rgba(159, 216, 189, 0.12);
+  margin-bottom: 4px;
+}
+
+.port-dropdown-title {
+  font-family: var(--orca-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--orca-primary);
+  flex: 1;
+}
+
+.port-dropdown-count {
+  font-family: var(--orca-font-mono);
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: var(--orca-r-full);
+  background: rgba(159, 216, 189, 0.12);
+  color: var(--orca-primary);
+}
+
+.port-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Individual Port Options */
+.port-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.port-dropdown-item:hover {
+  background: rgba(159, 216, 189, 0.12);
+  border-color: rgba(159, 216, 189, 0.25);
+  transform: translateX(2px);
+}
+
+.port-dropdown-item.is-selected {
+  background: rgba(159, 216, 189, 0.16);
+  border-color: rgba(159, 216, 189, 0.4);
+}
+
+.port-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.port-item-name {
+  font-family: var(--orca-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  transition: color 0.15s;
+}
+
+.port-dropdown-item:hover .port-item-name {
+  color: var(--orca-primary);
+}
+
+.port-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--orca-font-mono);
+  font-size: 10px;
+  color: var(--orca-text-dim);
+}
+
+.port-item-type {
   color: var(--orca-text-secondary);
 }
 
-.orca-port-selector select {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  font-family: var(--orca-font-body);
-  font-size: 12.5px;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
+.port-item-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orca-safe);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.orca-port-selector select option {
-  background: #081410;
-  color: #ffffff;
+.port-dropdown-item.is-selected .port-item-check {
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* Nav Feature Tabs */
@@ -1366,8 +1564,8 @@ html[lang="te"], [lang="te"] {
    -------------------------------------------------------------------------- */
 .gmap-floating-controls {
   position: absolute;
-  bottom: 30px;
-  right: 16px;
+  bottom: 96px;
+  right: 24px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -2043,27 +2241,46 @@ html[lang="te"], [lang="te"] {
   font-size: 10.5px;
 }
 
-/* Quick Action Chips Row above Chat Input */
+/* Quick Action Chips Row above Chat Input with custom scrollbar */
 .quick-chips-row {
-  padding: 8px 12px;
+  padding: 8px 12px 10px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
   white-space: nowrap;
-  border: 1px solid rgba(159, 216, 189, 0.12);
+  border: 1px solid rgba(159, 216, 189, 0.16);
   border-radius: var(--orca-r-md);
-  background: rgba(5, 12, 9, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  scrollbar-width: none !important;
-  -ms-overflow-style: none;
+  background: rgba(5, 12, 9, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(159, 216, 189, 0.45) rgba(4, 14, 10, 0.4);
+  overscroll-behavior: contain;
   flex-shrink: 0;
 }
 
 .quick-chips-row::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  display: block !important;
+  height: 6px !important;
+}
+
+.quick-chips-row::-webkit-scrollbar-track {
+  display: block !important;
+  background: rgba(4, 14, 10, 0.6);
+  border-radius: 999px;
+  margin: 0 8px;
+}
+
+.quick-chips-row::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: linear-gradient(90deg, rgba(159, 216, 189, 0.4) 0%, rgba(159, 216, 189, 0.75) 100%);
+  border-radius: 999px;
+  border: 1px solid rgba(159, 216, 189, 0.3);
+  transition: background 0.2s ease;
+}
+
+.quick-chips-row::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(159, 216, 189, 0.7) 0%, rgba(159, 216, 189, 1) 100%);
 }
 
 .quick-chips-row::-webkit-scrollbar-button {
@@ -2708,6 +2925,386 @@ html[lang="te"], [lang="te"] {
 
 .verdict-badge .morphicon {
   margin-right: 1px;
+}
+
+/* ==========================================================================
+   15. Floating Chatbot Action Button (FAB) - Fixed Bottom-Right Across All Views
+   ========================================================================== */
+.orca-floating-chat-btn {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+  z-index: 1050;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 10px;
+  background: linear-gradient(135deg, rgba(8, 26, 20, 0.94) 0%, rgba(4, 14, 10, 0.98) 100%);
+  border: 1.5px solid rgba(159, 216, 189, 0.38);
+  border-radius: var(--orca-r-full);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.65),
+    0 0 20px rgba(159, 216, 189, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--orca-text-primary);
+  font-family: var(--orca-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  outline: none;
+}
+
+.orca-floating-chat-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(159, 216, 189, 0.7);
+  box-shadow: 
+    0 14px 40px rgba(0, 0, 0, 0.75),
+    0 0 28px rgba(159, 216, 189, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.orca-floating-chat-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.orca-floating-chat-btn:focus-visible {
+  outline: 2px solid var(--orca-primary);
+  outline-offset: 3px;
+}
+
+/* Ambient Pulse Aura */
+.fab-glow-backdrop {
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(159, 216, 189, 0.35) 0%, transparent 70%);
+  filter: blur(8px);
+  opacity: 0.6;
+  z-index: -1;
+  pointer-events: none;
+  animation: fab-glow-pulse 3s infinite ease-in-out;
+}
+
+@keyframes fab-glow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+/* Icon Bubble with Live Status Dot */
+.fab-icon-bubble {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(159, 216, 189, 0.25) 0%, rgba(159, 216, 189, 0.1) 100%);
+  border: 1px solid rgba(159, 216, 189, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orca-primary);
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.orca-floating-chat-btn:hover .fab-icon-bubble {
+  background: linear-gradient(135deg, rgba(159, 216, 189, 0.4) 0%, rgba(159, 216, 189, 0.18) 100%);
+  border-color: rgba(159, 216, 189, 0.6);
+  color: #ffffff;
+}
+
+.fab-online-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orca-safe);
+  box-shadow: 0 0 6px var(--orca-safe);
+  border: 1.5px solid #040e0a;
+  animation: fab-online-blink 2.5s infinite ease-in-out;
+}
+
+@keyframes fab-online-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+/* Text & Micro-Badge Content */
+.fab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.fab-badge {
+  font-family: var(--orca-font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--orca-primary);
+  opacity: 0.9;
+}
+
+.fab-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Trailing Navigation Arrow */
+.fab-arrow-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orca-primary);
+  margin-left: 2px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.orca-floating-chat-btn:hover .fab-arrow-indicator {
+  transform: translate(2px, -2px);
+  color: #ffffff;
+}
+
+/* Style when inside Chat Bot view */
+.orca-floating-chat-btn.is-chat-active {
+  border-color: rgba(74, 222, 128, 0.6);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(74, 222, 128, 0.3);
+}
+
+.orca-floating-chat-btn.is-chat-active .fab-badge {
+  color: var(--orca-safe);
+}
+
+/* Responsive Mobile Rules */
+@media (max-width: 768px) {
+  .orca-floating-chat-btn {
+    bottom: 18px;
+    right: 18px;
+    padding: 7px 14px 7px 9px;
+  }
+  
+  .orca-floating-chat-btn.is-chat-active {
+    display: none; /* Auto-hide when actively chatting on small mobile screens to keep send button clear */
+  }
+
+  .gmap-floating-controls {
+    bottom: 84px;
+    right: 16px;
+  }
+}
+
+/* ==========================================================================
+   ORCA API Integration & Enhanced Chat Contract Components
+   ========================================================================== */
+
+/* Backend API Health Status Indicator in Header */
+.orca-api-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  background: rgba(5, 16, 12, 0.7);
+  border: 1px solid rgba(159, 216, 189, 0.2);
+  border-radius: var(--orca-r-full);
+  font-family: var(--orca-font-mono);
+  font-size: 10.5px;
+  color: var(--orca-text-secondary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.orca-api-status-pill .status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.4);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.orca-api-status-pill.is-online {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #a7f3d0;
+  background: rgba(6, 26, 16, 0.75);
+}
+
+.orca-api-status-pill.is-online .status-dot {
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+  animation: apiDotPulse 2s infinite ease-in-out;
+}
+
+.orca-api-status-pill.is-offline {
+  border-color: rgba(226, 163, 86, 0.35);
+  color: #fed7aa;
+  background: rgba(26, 18, 6, 0.75);
+}
+
+.orca-api-status-pill.is-offline .status-dot {
+  background: #e2a356;
+  box-shadow: 0 0 6px rgba(226, 163, 86, 0.6);
+}
+
+@keyframes apiDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+
+/* Enhanced Chat Message Meta Bar */
+.chat-meta-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(159, 216, 189, 0.12);
+}
+
+/* Chat Risk Score Pill */
+.chat-risk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--orca-r-full);
+  font-family: var(--orca-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chat-risk-pill.risk-low {
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+.chat-risk-pill.risk-med {
+  background: rgba(226, 163, 86, 0.12);
+  border: 1px solid rgba(226, 163, 86, 0.35);
+  color: #e2a356;
+}
+
+.chat-risk-pill.risk-high {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+}
+
+/* Chat Alerts Count Pill */
+.chat-alerts-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--orca-r-full);
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  font-family: var(--orca-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Chat Timestamp */
+.chat-timestamp {
+  margin-left: auto;
+  font-family: var(--orca-font-mono);
+  font-size: 10px;
+  color: var(--orca-text-dim);
+}
+
+/* View on Marine Map Button */
+.btn-view-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 14px;
+  background: rgba(30, 58, 138, 0.35);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  border-radius: var(--orca-r-full);
+  color: #93c5fd;
+  font-family: var(--orca-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-view-map:hover {
+  background: rgba(30, 58, 138, 0.6);
+  border-color: #60a5fa;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-view-map svg {
+  transition: transform 0.2s ease;
+}
+
+.btn-view-map:hover svg {
+  transform: translate(2px, -2px);
+}
+
+/* Chat Typing / Reasoning Loading Indicator */
+.chat-typing-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-family: var(--orca-font-mono);
+  font-size: 11px;
+  color: var(--orca-text-secondary);
+}
+
+.chat-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--orca-primary);
+  border-radius: 50%;
+  animation: chatDotBounce 1.4s infinite ease-in-out both;
+}
+
+.chat-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.chat-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes chatDotBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
 

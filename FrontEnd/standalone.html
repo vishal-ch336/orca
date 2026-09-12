@@ -13,7 +13,7 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="styles/leaflet.css">
-  <link rel="stylesheet" href="styles/orca.css?v=nexus_fixed_header_v4">
+  <link rel="stylesheet" href="styles/orca.css?v=api_contract_v1">
 </head>
 <body>
 
@@ -73,15 +73,42 @@
         <button id="lang-btn-te" class="lang-toggle-btn" data-lang="te">తెలుగు</button>
       </div>
 
-      <div class="orca-port-selector">
-        <span class="morphicon-slot" data-morphicon="location" data-morph-size="14" style="color: var(--orca-primary);"></span>
-        <span data-i18n="base_port_label">Base Port:</span>
-        <select id="port-select" aria-label="Select Andhra Pradesh Port">
+      <!-- Custom Glassmorphic Port Selector (Andhra Pradesh Ports) -->
+      <div class="orca-port-selector-wrapper" id="port-selector-wrapper">
+        <select id="port-select" class="orca-port-select-hidden" aria-hidden="true" tabindex="-1">
           <option value="visakhapatnam" selected>Visakhapatnam Harbor</option>
           <option value="kakinada">Kakinada Fishery Port</option>
           <option value="machilipatnam">Machilipatnam Coast</option>
           <option value="nizampatnam">Nizampatnam Harbor</option>
         </select>
+
+        <button type="button" id="port-dropdown-trigger" class="orca-port-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Select Andhra Pradesh Base Port">
+          <span class="morphicon-slot" data-morphicon="location" data-morph-size="14" style="color: var(--orca-primary);"></span>
+          <span class="port-trigger-label" data-i18n="base_port_label">Base Port:</span>
+          <span id="port-trigger-current" class="port-trigger-current">Visakhapatnam Harbor</span>
+          <span class="port-trigger-chevron" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </button>
+
+        <div id="port-dropdown-menu" class="orca-port-dropdown" role="listbox" aria-label="Andhra Pradesh Harbors">
+          <div class="port-dropdown-header">
+            <span class="pulse-dot"></span>
+            <span class="port-dropdown-title" data-i18n="port_dropdown_header">Coastal Radar Ports</span>
+            <span class="port-dropdown-count">4 Harbors</span>
+          </div>
+          <div class="port-dropdown-list" id="port-dropdown-options">
+            <!-- Rendered dynamically with full i18n & telemetry metadata -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend API Health Status Indicator -->
+      <div id="orca-api-status" class="orca-api-status-pill is-offline" title="API Status: http://localhost:8000 (Click to re-check)">
+        <span class="status-dot"></span>
+        <span id="orca-api-status-text">Standalone Mode</span>
       </div>
 
       <div style="font-family: var(--orca-font-mono); font-size: 11px; color: var(--orca-primary); display: flex; align-items: center; gap: 6px;">
@@ -832,11 +859,28 @@
 
   </main>
 
+  <!-- Persistent Floating Chatbot Action Button (FAB) - Fixed Bottom-Right on Every Screen -->
+  <button id="floating-orca-chat-btn" class="orca-floating-chat-btn" aria-label="Ask ORCA AI Chatbot" title="Ask ORCA AI Chatbot" data-i18n-title="floating_chat_tooltip">
+    <div class="fab-glow-backdrop" aria-hidden="true"></div>
+    <div class="fab-icon-bubble">
+      <span class="morphicon-slot" data-morphicon="chat" data-morph-size="18"></span>
+      <span class="fab-online-dot" aria-hidden="true"></span>
+    </div>
+    <div class="fab-content">
+      <span class="fab-badge" data-i18n="floating_chat_badge">AI 24/7</span>
+      <span class="fab-title" data-i18n="floating_chat_btn">Ask ORCA AI</span>
+    </div>
+    <div class="fab-arrow-indicator" aria-hidden="true">
+      <span class="morphicon-slot" data-morphicon="arrow_up_right" data-morph-size="12"></span>
+    </div>
+  </button>
+
   <!-- Scripts -->
   <script src="js/landscape.js?v=terrain_revert"></script>
   <script src="js/morphicons.js"></script>
   <script src="js/leaflet.js"></script>
   <script src="js/orca-i18n.js"></script>
+  <script src="js/orca-api.js"></script>
   <script src="js/orca-map.js"></script>
   <script src="js/orca-chat.js"></script>
   <script src="js/orca-app.js"></script>

@@ -342,6 +342,7 @@ class OrcaMarineMap {
     this.layerGroups.imbl = L.layerGroup().addTo(this.map);
     this.layerGroups.route = L.layerGroup().addTo(this.map);
     this.layerGroups.boat = L.layerGroup().addTo(this.map);
+    this.layerGroups.backend = L.layerGroup().addTo(this.map);
 
     this.renderPorts();
     this.renderPFZ();
@@ -349,6 +350,11 @@ class OrcaMarineMap {
     this.renderIMBL();
     this.renderRoute();
     this.renderUserBoat();
+
+    // Ingest backend GeoJSON payload on initialization
+    setTimeout(() => {
+      this.loadBackendMapPayload(this.userBoat.lat, this.userBoat.lon);
+    }, 400);
   }
 
   // ==========================================
@@ -1140,6 +1146,9 @@ class OrcaMarineMap {
 
       this.renderUserBoat();
       this.renderRoute();
+
+      // Refresh backend GeoJSON overlay for newly selected port location
+      this.loadBackendMapPayload(port.lat, port.lon);
     }
   }
 
@@ -1184,6 +1193,155 @@ class OrcaMarineMap {
   onResize() {
     if (this.map) {
       this.map.invalidateSize();
+    }
+  }
+
+  // Load and render GeoJSON map payload from Backend API (GET /debug/map-payload)
+  async loadBackendMapPayload(lat, lon) {
+    if (!this.map) return;
+    if (!this.layerGroups.backend) {
+      this.layerGroups.backend = L.layerGroup().addTo(this.map);
+    }
+    this.layerGroups.backend.clearLayers();
+
+    if (!window.orcaApi || typeof window.orcaApi.getMapPayload !== 'function') {
+      return;
+    }
+
+    try {
+      const payload = await window.orcaApi.getMapPayload(lat, lon);
+      if (!payload || !payload.features) return;
+
+      const isTe = window.orcaI18n && window.orcaI18n.currentLang === 'te';
+
+      const geoJsonLayer = L.geoJSON(payload, {
+        style: (feature) => {
+          const props = feature.properties || {};
+          const layerType = props.layer || '';
+          if (layerType === 'boundary_zone' || layerType === 'eez_boundary') {
+            return {
+              color: props.stroke || '#f87171',
+              weight: props['stroke-width'] || 2.5,
+              opacity: 0.9,
+              dashArray: '8, 6',
+              fillColor: props.stroke || '#f87171',
+              fillOpacity: typeof props['fill-opacity'] === 'number' ? props['fill-opacity'] : 0.08,
+            };
+          }
+          return {
+            color: '#3b82f6',
+            weight: 2,
+            opacity: 0.8,
+          };
+        },
+        pointToLayer: (feature, latlng) => {
+          const props = feature.properties || {};
+          const layerType = props.layer || '';
+
+          if (layerType === 'pfz_advisory') {
+            const fishSvg = `
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#137333" stroke-width="2.3">
+                <path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.46-3.44 6-7 6s-7.56-2.54-8.5-6z"/>
+                <circle cx="18" cy="12" r="1.5" fill="#137333"/>
+              </svg>
+            `;
+            const pinIcon = this.createGooglePin({
+              color: '#34a853',
+              iconSvg: fishSvg,
+              label: props.station_name || 'PFZ',
+              size: 32,
+            });
+            return L.marker(latlng, { icon: pinIcon });
+          }
+
+          if (layerType === 'alert') {
+            const warnSvg = `
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ea4335" stroke-width="2.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            `;
+            const pinIcon = this.createGooglePin({
+              color: props['marker-color'] || '#ea4335',
+              iconSvg: warnSvg,
+              label: 'Alert',
+              size: 32,
+            });
+            return L.marker(latlng, { icon: pinIcon });
+          }
+
+          // Fallback circle marker for points like user_location
+          return L.circleMarker(latlng, {
+            radius: 6,
+            color: '#1a73e8',
+            fillColor: '#60a5fa',
+            fillOpacity: 0.8,
+            weight: 2,
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          const props = feature.properties || {};
+          const layerType = props.layer || '';
+
+          if (layerType === 'pfz_advisory') {
+            const popupHtml = `
+              <div class="gmap-popup">
+                <div class="gmap-popup-header">
+                  <span class="gmap-popup-category" style="color: #34a853;">🎣 INCOIS PFZ ADVISORY</span>
+                  <div class="gmap-popup-title">${props.station_name || 'Target Station'}</div>
+                </div>
+                <div class="gmap-popup-body">
+                  <div style="font-size:11px; margin-bottom: 6px;">${props.advisory_text || ''}</div>
+                  <div style="font-size:11px; color:#5f6368;">
+                    <strong>SST:</strong> ${props.sst_value ? props.sst_value + ' °C' : 'N/A'}<br>
+                    <strong>Distance:</strong> ${props.distance_km != null ? props.distance_km.toFixed(1) + ' km' : 'N/A'}<br>
+                    <strong>Forecast Date:</strong> ${props.forecast_date || 'Today'}
+                  </div>
+                </div>
+              </div>
+            `;
+            layer.bindPopup(popupHtml);
+          } else if (layerType === 'boundary_zone' || layerType === 'eez_boundary') {
+            const popupHtml = `
+              <div class="gmap-popup">
+                <div class="gmap-popup-header">
+                  <span class="gmap-popup-category" style="color: #f87171;">🚩 MARITIME BOUNDARY</span>
+                  <div class="gmap-popup-title">${props.name || 'EEZ Zone'}</div>
+                </div>
+                <div class="gmap-popup-body">
+                  <div style="font-size:11px; color:#5f6368;">
+                    Official India Exclusive Economic Zone perimeter for Andhra Pradesh coastal monitoring.
+                  </div>
+                </div>
+              </div>
+            `;
+            layer.bindPopup(popupHtml);
+          } else if (layerType === 'alert') {
+            const popupHtml = `
+              <div class="gmap-popup">
+                <div class="gmap-popup-header">
+                  <span class="gmap-popup-category" style="color: #ea4335;">⚠️ ACTIVE WARNING</span>
+                  <div class="gmap-popup-title">${props.title || 'Marine Alert'}</div>
+                </div>
+                <div class="gmap-popup-body">
+                  <div style="font-size:11px; color:#374151;">${props.message || ''}</div>
+                </div>
+              </div>
+            `;
+            layer.bindPopup(popupHtml);
+          }
+        },
+      });
+
+      this.layerGroups.backend.addLayer(geoJsonLayer);
+
+      // Smooth pan to coordinates if provided
+      if (typeof lat === 'number' && typeof lon === 'number') {
+        this.map.flyTo([lat, lon], 9, { animate: true, duration: 1.0 });
+      }
+    } catch (err) {
+      console.warn('[OrcaMap] Failed to load backend map payload:', err);
     }
   }
 

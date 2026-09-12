@@ -19,6 +19,7 @@ const ORCA_TRANSLATIONS = {
     nav_alerts: "Alerts",
     nav_evidences: "Evidences",
     base_port_label: "Base Port:",
+    port_dropdown_header: "Coastal Radar Ports",
 
     // Landing Page Hero
     hero_badge: "Marine Ecosystem Reasoning • PS 26176",
@@ -33,6 +34,7 @@ const ORCA_TRANSLATIONS = {
     snap_port_title: "COASTAL CONDITIONS • VISAKHAPATNAM",
     verdict_caution: "CAUTION",
     verdict_safe: "SAFE TO SAIL",
+    verdict_unsafe: "UNSAFE TO SAIL",
     snap_wind_label: "Wind Speed",
     snap_wind_val: "14 kts ENE",
     snap_wind_sub: "Moderate Breeze",
@@ -128,6 +130,11 @@ const ORCA_TRANSLATIONS = {
 
     // Footer
     footer_tag: "ORCA — Built for the coastal fisherfolk of Andhra Pradesh • Smart India Hackathon 2026 (PS 26176)",
+
+    // Floating Chatbot Button
+    floating_chat_btn: "Ask ORCA AI",
+    floating_chat_badge: "AI 24/7",
+    floating_chat_tooltip: "Chat with ORCA Marine Safety AI Assistant",
   },
 
   te: {
@@ -138,6 +145,7 @@ const ORCA_TRANSLATIONS = {
     nav_alerts: "హెచ్చరికలు",
     nav_evidences: "ఆధారాలు",
     base_port_label: "ప్రధాన రేవు:",
+    port_dropdown_header: "తీరప్రాంత రాడార్ రేవులు",
 
     // Landing Page Hero
     hero_badge: "సముద్ర పర్యావరణ వ్యవస్థ విశ్లేషణ • PS 26176",
@@ -152,6 +160,7 @@ const ORCA_TRANSLATIONS = {
     snap_port_title: "తీరప్రాంత పరిస్థితులు • విశాఖపట్నం",
     verdict_caution: "జాగ్రత్త",
     verdict_safe: "సురక్షితం",
+    verdict_unsafe: "ప్రమాదకరం",
     snap_wind_label: "గాలుల వేగం",
     snap_wind_val: "14 నాట్స్ ENE",
     snap_wind_sub: "మోస్తరు గాలులు",
@@ -247,6 +256,11 @@ const ORCA_TRANSLATIONS = {
 
     // Footer
     footer_tag: "ORCA — ఆంధ్రప్రదేశ్ మత్స్యకారుల కోసం ప్రత్యేకంగా రూపొందించబడింది • స్మార్ట్ ఇండియా హ్యాకథాన్ 2026 (PS 26176)",
+
+    // Floating Chatbot Button
+    floating_chat_btn: "ఆర్కా AI ని అడగండి",
+    floating_chat_badge: "AI 24/7",
+    floating_chat_tooltip: "ఆర్కా మెరైన్ సేఫ్టీ AI తో మాట్లాడండి",
   },
 };
 
@@ -348,6 +362,15 @@ class OrcaI18nManager {
       }
     });
 
+    // Update titles and tooltips
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-title');
+      if (dict[key]) {
+        el.setAttribute('title', dict[key]);
+        el.setAttribute('aria-label', dict[key]);
+      }
+    });
+
     // Update Port Selector Options to pure language
     const portSelect = document.getElementById('port-select');
     if (portSelect) {
@@ -356,6 +379,11 @@ class OrcaI18nManager {
       portSelect.innerHTML = portList
         .map((p) => `<option value="${p.value}" ${p.value === currentVal ? 'selected' : ''}>${p.text}</option>`)
         .join('');
+    }
+
+    // Sync Custom Glassmorphic Port Selector
+    if (window.orcaPortSelector && typeof window.orcaPortSelector.syncLanguage === 'function') {
+      window.orcaPortSelector.syncLanguage(lang);
     }
 
     // Update Quick Action Chips Text & Morphicons
@@ -369,6 +397,11 @@ class OrcaI18nManager {
     // Redraw map with selected language labels
     if (window.orcaMap && typeof window.orcaMap.draw === 'function') {
       window.orcaMap.draw();
+    }
+
+    // Refresh API status pill text in new language
+    if (window.orcaApi && typeof window.orcaApi.notifyStatus === 'function') {
+      window.orcaApi.notifyStatus();
     }
   }
 

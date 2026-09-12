@@ -377,6 +377,18 @@ class OrcaChatManager {
         this.askQuery(queryText);
       });
     });
+
+    // Enable mouse wheel horizontal scrolling for suggested texts (quick action chips)
+    document.querySelectorAll('.quick-chips-row').forEach((row) => {
+      row.addEventListener('wheel', (e) => {
+        const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        if (delta !== 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          row.scrollLeft += delta;
+        }
+      }, { passive: false });
+    });
   }
 
   renderInitialAdvisory() {
@@ -456,16 +468,254 @@ class OrcaChatManager {
     }
   }
 
-  askQuery(queryText) {
+  formatMarkdown(text) {
+    if (!text) return '';
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    // Bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Line breaks
+    html = html.replace(/\n/g, '<br>');
+    return html;
+  }
+
+  viewOnMap(lat, lon) {
+    if (typeof window.switchView === 'function') {
+      window.switchView('map');
+    }
+    if (window.orcaMap) {
+      if (typeof window.orcaMap.loadBackendMapPayload === 'function') {
+        window.orcaMap.loadBackendMapPayload(lat, lon);
+      } else if (typeof window.orcaMap.highlightZone === 'function') {
+        window.orcaMap.highlightZone('PFZ-VIZAG-01');
+      }
+    }
+  }
+
+  async askQuery(queryText) {
     if (typeof window.switchView === 'function') {
       window.switchView('chat');
     }
 
     this.addMessage(queryText, 'user');
 
-    setTimeout(() => {
+    const isTe = window.orcaI18n && window.orcaI18n.currentLang === 'te';
+
+    // Show temporary typing/reasoning indicator bubble
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'message-bubble message-assistant';
+    typingBubble.innerHTML = `
+      <div class="chat-typing-container">
+        <div class="chat-typing-dots"><span></span><span></span><span></span></div>
+        <span>${isTe ? 'ఆర్కా AI సముద్ర డేటాను విశ్లేషిస్తోంది...' : 'ORCA Reasoning Engine analyzing satellite & sensor telemetry...'}</span>
+      </div>
+    `;
+    this.thread.appendChild(typingBubble);
+    this.thread.scrollTop = this.thread.scrollHeight;
+
+    // Get current GPS location from boat or selected harbor
+    let lat = 17.6868;
+    let lon = 83.2185;
+    if (window.orcaMap && window.orcaMap.userBoat) {
+      lat = window.orcaMap.userBoat.lat;
+      lon = window.orcaMap.userBoat.lon;
+    } else {
+      const portSelect = document.getElementById('port-select');
+      const portCoords = {
+        visakhapatnam: [17.6868, 83.2185],
+        kakinada: [16.9891, 82.2475],
+        machilipatnam: [16.1875, 81.1389],
+        nizampatnam: [15.9042, 80.6722],
+        krishnapatnam: [14.2500, 80.1167],
+      };
+      if (portSelect && portCoords[portSelect.value]) {
+        [lat, lon] = portCoords[portSelect.value];
+      }
+    }
+
+    // Call Backend API via OrcaApiClient
+    let apiResult = null;
+    try {
+      if (window.orcaApi && typeof window.orcaApi.postQuery === 'function') {
+        apiResult = await window.orcaApi.postQuery({ query: queryText, lat, lon });
+      }
+    } catch (err) {
+      console.warn('[OrcaChat] API call failed:', err);
+    }
+
+    // Remove typing bubble
+    if (typingBubble && typingBubble.parentNode) {
+      typingBubble.parentNode.removeChild(typingBubble);
+    }
+
+    // Trigger any associated map action based on query keywords
+    for (const key of Object.keys(this.predefinedResponses)) {
+      if (
+        queryText.toLowerCase().includes(key.toLowerCase()) ||
+        key.toLowerCase().includes(queryText.toLowerCase()) ||
+        this.matchKeywords(queryText, key)
+      ) {
+        const entry = this.predefinedResponses[key];
+        if (entry && entry.mapAction) {
+          entry.mapAction();
+        }
+        break;
+      }
+    }
+
+    // If API returned a valid contract response, render it according to contract
+    if (apiResult && apiResult.final_response) {
+      this.renderApiResponse(apiResult, lat, lon, isTe);
+    } else {
+      // Local fallback
       this.generateResponse(queryText);
-    }, 350);
+    }
+  }
+
+  renderApiResponse(res, lat, lon, isTe) {
+    const checkIcon = window.Morphicons ? window.Morphicons.get('check', { size: 14, color: '#4ade80' }) : '✓';
+    const warnIcon = window.Morphicons ? window.Morphicons.get('warning', { size: 14, color: '#e2a356' }) : '⚠️';
+    const dangerIcon = window.Morphicons ? window.Morphicons.get('danger', { size: 14, color: '#f87171' }) : '⛔';
+
+    // 1. Verdict Badge (safe | caution | unsafe | null)
+    let verdictHtml = '';
+    if (res.verdict) {
+      const v = String(res.verdict).toLowerCase();
+      let vLabel = isTe ? 'సురక్షితం' : 'SAFE TO SAIL';
+      let vIcon = checkIcon;
+      if (v === 'caution') {
+        vLabel = isTe ? 'జాగ్రత్త' : 'CAUTION';
+        vIcon = warnIcon;
+      } else if (v === 'unsafe') {
+        vLabel = isTe ? 'ప్రమాదకరం' : 'UNSAFE TO SAIL';
+        vIcon = dangerIcon;
+      }
+      verdictHtml = `<span class="verdict-badge verdict-${v}">${vIcon} <span>${vLabel}</span></span>`;
+    }
+
+    // 2. Risk Score Pill
+    let riskHtml = '';
+    if (typeof res.risk_score === 'number') {
+      const score = Math.round(res.risk_score);
+      let riskClass = 'risk-low';
+      if (score > 70) riskClass = 'risk-high';
+      else if (score > 30) riskClass = 'risk-med';
+      const riskLabel = isTe ? `ప్రమాద స్కోర్: ${score}/100` : `Risk: ${score}/100`;
+      riskHtml = `<span class="chat-risk-pill ${riskClass}">${riskLabel}</span>`;
+    }
+
+    // 3. Alerts Count Pill
+    let alertsHtml = '';
+    if (typeof res.alerts_count === 'number' && res.alerts_count > 0) {
+      const aIcon = window.Morphicons ? window.Morphicons.get('alert', { size: 12, color: '#f87171' }) : '⚠️';
+      const aLabel = isTe
+        ? `${res.alerts_count} క్రియాశీల హెచ్చరిక${res.alerts_count > 1 ? 'లు' : ''}`
+        : `${res.alerts_count} Active Alert${res.alerts_count > 1 ? 's' : ''}`;
+      alertsHtml = `<span class="chat-alerts-pill">${aIcon} <span>${aLabel}</span></span>`;
+    }
+
+    // 4. Formatted Timestamp
+    let timestampHtml = '';
+    if (res.generated_at) {
+      let timeStr = '';
+      try {
+        const d = new Date(res.generated_at);
+        if (!isNaN(d.getTime())) {
+          timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+      } catch (e) {}
+      if (!timeStr) {
+        const now = new Date();
+        timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+      const timeLabel = isTe ? `నవీకరణ ${timeStr} IST` : `Updated ${timeStr} IST`;
+      timestampHtml = `<span class="chat-timestamp">${timeLabel}</span>`;
+    }
+
+    // 5. Meta Bar
+    let metaBarHtml = '';
+    if (verdictHtml || riskHtml || alertsHtml || timestampHtml) {
+      metaBarHtml = `
+        <div class="chat-meta-bar">
+          ${verdictHtml}
+          ${riskHtml}
+          ${alertsHtml}
+          ${timestampHtml}
+        </div>
+      `;
+    }
+
+    // 6. View on Marine Map Button
+    let mapBtnHtml = '';
+    if (res.visualization_available) {
+      const mapBtnText = isTe ? 'సముద్ర పటంలో చూడండి' : 'View on Marine Map';
+      mapBtnHtml = `
+        <div>
+          <button class="btn-view-map" onclick="window.orcaChat.viewOnMap(${lat}, ${lon})">
+            <span>${mapBtnText}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="7" y1="17" x2="17" y2="7"></line>
+              <polyline points="7 7 17 7 17 17"></polyline>
+            </svg>
+          </button>
+        </div>
+      `;
+    }
+
+    // 7. Collapsible Evidence Drawer
+    let evidenceHtml = '';
+    if (Array.isArray(res.evidence) && res.evidence.length > 0) {
+      const drawerId = `evidence-${Date.now()}`;
+      const evIcon = window.Morphicons ? window.Morphicons.get('evidence', { size: 14, color: 'var(--orca-primary)' }) : '📋';
+      const chevIcon = window.Morphicons ? window.Morphicons.get('chevron_down', { size: 12 }) : '▼';
+      const drawerTitle = isTe ? 'ఆధారాలు & డేటా మూలాలు' : 'View Evidence & Data Sources';
+
+      const evidenceItems = res.evidence
+        .map((e) => {
+          let tsStr = e.timestamp || '';
+          if (tsStr.includes('T')) {
+            try {
+              const d = new Date(tsStr);
+              tsStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+            } catch (err) {}
+          }
+          const desc = e.description || e.type || '';
+          return `
+            <div class="evidence-entry">
+              <div class="evidence-source">${e.source || 'Data Source'} ${tsStr ? `• <span style="font-weight:400; color:#9cb1a6;">${tsStr}</span>` : ''}</div>
+              <div class="evidence-detail">${desc}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      evidenceHtml = `
+        <button class="evidence-drawer-toggle" onclick="window.toggleEvidenceDrawer('${drawerId}', this)">
+          ${evIcon} <span>${drawerTitle} (${res.evidence.length})</span> ${chevIcon}
+        </button>
+        <div id="${drawerId}" class="evidence-content">
+          ${evidenceItems}
+        </div>
+      `;
+    }
+
+    const metaLabel = isTe
+      ? `<span class="ai-badge">ఆర్కా AI సహాయకుడు</span> • <span>సముద్ర విశ్లేషణ ఇంజిన్</span>`
+      : `<span class="ai-badge">ORCA AI ASSISTANT</span> • <span>Marine Reasoning Engine</span>`;
+
+    const assistantHtml = `
+      <div class="message-meta">${metaLabel}</div>
+      <div class="chat-body-text">${this.formatMarkdown(res.final_response)}</div>
+      ${mapBtnHtml}
+      ${metaBarHtml}
+      ${evidenceHtml}
+    `;
+
+    this.addMessage(assistantHtml, 'assistant');
   }
 
   handleUserSend() {
