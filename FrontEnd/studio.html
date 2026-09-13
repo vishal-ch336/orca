@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus — Volumetric Interfaces Remix Template | Neuform</title>
+  <meta name="description" content="Nexus Volumetric Dashboard Section is designed for demonstrating application workflows and interface hierarchy. Neuform turns prompts into AI HTML landing pages and reusable DESIGN.md design systems.">
+  <link rel="icon" type="image/svg+xml" href="assets/neuform-logo.svg">
+
+  <!-- Typography: Bricolage Grotesque, Instrument Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+  <!-- Three.js 3D Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Application Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/aerodome.css">
+  <link rel="stylesheet" href="styles/syntax.css">
+</head>
+<body>
+
+  <!-- Floating Exit Fullscreen Button -->
+  <button id="exit-fullscreen-btn" class="nf-exit-fullscreen-btn" title="Return to Neuform Studio">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+    </svg>
+    Exit Fullscreen
+  </button>
+
+  <!-- Top Neuform Navigation Bar -->
+  <header class="nf-navbar">
+    <a href="/" class="nf-logo-link" title="Neuform Home">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="12" y1="2" x2="12" y2="7" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="12" y1="17" x2="12" y2="22" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="7" y2="12" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="17" y1="12" x2="22" y2="12" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="4.93" y1="4.93" x2="8.46" y2="8.46" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="15.54" y1="15.54" x2="19.07" y2="19.07" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="4.93" y1="19.07" x2="8.46" y2="15.54" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="15.54" y1="8.46" x2="19.07" y2="4.93" stroke="#9FD8BD" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="1.6" fill="#FFFFFF"/>
+      </svg>
+    </a>
+
+    <nav class="nf-nav-center">
+      <a href="#workspace" class="nf-nav-item">Workspace</a>
+      <a href="#templates" class="nf-nav-item active">Templates</a>
+      <a href="#skills" class="nf-nav-item">Skills</a>
+      <a href="#learn" class="nf-nav-item">Learn</a>
+      <a href="#pricing" class="nf-nav-item">Pricing</a>
+    </nav>
+
+    <div class="nf-nav-right">
+      <a href="#login" class="nf-login-btn">
+        Login <span class="nf-key-badge">N</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Neuform Workspace -->
+  <main class="nf-workspace">
+    
+    <!-- Left Pane: Template Studio Window Frame -->
+    <section class="nf-studio-window" aria-label="Template Preview and Design System Inspector">
+      
+      <!-- Window Frame Header -->
+      <div class="nf-window-header">
+        <div class="nf-window-left">
+          <div class="nf-window-dots">
+            <span class="nf-dot close" title="Close"></span>
+            <span class="nf-dot min" title="Minimize"></span>
+            <span class="nf-dot max" title="Toggle Fullscreen View"></span>
+          </div>
+
+          <div class="nf-tabs" role="tablist">
+            <button id="tab-btn-preview" class="nf-tab-btn active" role="tab" aria-selected="true" aria-controls="pane-preview">PREVIEW</button>
+            <button id="tab-btn-design" class="nf-tab-btn" role="tab" aria-selected="false" aria-controls="pane-design">DESIGN.MD</button>
+          </div>
+        </div>
+
+        <div class="nf-window-title">NEXUS — VOLUMETRIC INTERFACES</div>
+
+        <div class="nf-window-right">
+          <button id="open-library-btn" class="nf-window-action" title="Toggle full-screen page mode">
+            OPEN IN LIBRARY
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="7" y1="17" x2="17" y2="7"></line>
+              <polyline points="7 7 17 7 17 17"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Window Viewport Content Area -->
+      <div class="nf-window-content">
+        
+        <!-- Tab 1: PREVIEW (Interactive Aerodome Landing Page) -->
+        <div id="pane-preview" class="tab-pane active" role="tabpanel">
+          <div class="aerodome-page">
+            
+            <!-- 3D Procedural WebGL Canvas Field -->
+            <div class="canvas-container">
+              <canvas id="terrain-canvas"></canvas>
+              <div class="canvas-overlay-gradient"></div>
+            </div>
+
+            <!-- Aerodome Navigation Bar -->
+            <nav class="aero-nav">
+              <a href="#" class="aero-brand">
+                AERODOME <span class="degree">°</span>
+              </a>
+
+              <ul class="aero-nav-links">
+                <li><a href="#platform">Platform</a></li>
+                <li><a href="#usecases">Use cases</a></li>
+                <li><a href="#api">API</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#docs">Docs</a></li>
+              </ul>
+
+              <a href="#login" class="aero-login-btn">LOG IN</a>
+            </nav>
+
+            <!-- Floating Live Telemetry HUD -->
+            <aside class="aero-telemetry-hud" aria-label="Terrain Generation Telemetry">
+              <div class="telemetry-row">
+                <span class="telemetry-label">SEED</span>
+                <span id="telemetry-seed" class="telemetry-value">AX-974983</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-label">ELEVATION</span>
+                <span id="telemetry-elevation" class="telemetry-value">2,057 M</span>
+              </div>
+              <div class="telemetry-row">
+                <span class="telemetry-label">GRID</span>
+                <span id="telemetry-grid" class="telemetry-value">45.71°N 73.64°W</span>
+              </div>
+              <button id="new-seed-btn" class="new-seed-btn" title="Generate procedural terrain with a new seed">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+                NEW SEED <span class="key-tag">R</span>
+              </button>
+            </aside>
+
+            <!-- Aerodome Hero Section -->
+            <section class="aero-hero">
+              <div class="aero-hero-body">
+                <div class="aero-badge">
+                  <span class="aero-pulse-dot"></span>
+                  PROCEDURAL TERRAIN ENGINE — LIVE RENDER
+                </div>
+
+                <h1 class="aero-headline">
+                  Worlds, generated.<br>
+                  From a single seed.<br>
+                  <span class="highlight">To galactic scale.</span>
+                </h1>
+
+                <p class="aero-subtitle">
+                  Aerodome turns one seed into <strong>geologically accurate, render-ready terrain</strong> — streamed in real time to game, simulation, and VFX pipelines. The landscape behind this page is being generated right now.
+                </p>
+
+                <div class="aero-cta-row">
+                  <a href="#create" class="aero-btn-primary">
+                    Start creating
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                      <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                  </a>
+                  <a href="#sales" class="aero-btn-secondary">Contact sales</a>
+                </div>
+              </div>
+            </section>
+
+            <!-- Aerodome Extended Features Section -->
+            <section class="aero-features-section">
+              <div class="aero-section-header">
+                <h2 class="aero-section-title">Infinite Geological Fidelity</h2>
+                <p class="aero-section-subtitle">Stream dynamic volumetric terrain meshes directly into rendering engines with zero geometry pop-in.</p>
+              </div>
+
+              <div class="aero-grid">
+                <div class="aero-card">
+                  <div class="aero-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                      <polyline points="2 17 12 22 22 17"></polyline>
+                      <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                  </div>
+                  <h3 class="aero-card-title">Real-Time LoD Streaming</h3>
+                  <p class="aero-card-desc">Continuous multi-resolution quadtree mesh generation that scales seamlessly from planetary horizon to millimeter pebble detail.</p>
+                </div>
+
+                <div class="aero-card">
+                  <div class="aero-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                  </div>
+                  <h3 class="aero-card-title">Hydraulic & Thermal Erosion</h3>
+                  <p class="aero-card-desc">Physically validated geological weathering algorithms simulate millions of years of river networks, scree slopes, and sediment transport.</p>
+                </div>
+
+                <div class="aero-card">
+                  <div class="aero-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                  </div>
+                  <h3 class="aero-card-title">Universal Pipeline Export</h3>
+                  <p class="aero-card-desc">Instant 1-click sync with OpenUSD, Nanite in Unreal Engine 5, Houdini Solaris, and Blender geometry node graphs.</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Aerodome Footer -->
+            <footer class="aero-footer">
+              <div>© Aerodome Systems. Real-time procedural simulation active.</div>
+              <div class="aero-footer-links">
+                <a href="#privacy">Privacy</a>
+                <a href="#terms">Terms</a>
+                <a href="#docs">API Specs</a>
+                <a href="#status">Cluster Status</a>
+              </div>
+            </footer>
+
+          </div>
+        </div>
+
+        <!-- Tab 2: DESIGN.MD (Interactive Code Viewer) -->
+        <div id="pane-design" class="tab-pane" role="tabpanel">
+          <div class="code-container">
+            <button id="copy-code-btn" class="code-copy-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy DESIGN.md
+            </button>
+            <pre><code><span class="token-frontmatter">---</span>
+<span class="token-key">version:</span> <span class="token-string">"alpha"</span>
+<span class="token-key">name:</span> <span class="token-string">"Nexus — Volumetric Interfaces"</span>
+<span class="token-key">description:</span> <span class="token-string">"Nexus Volumetric Dashboard Section is designed for demonstrating application workflows and interface hierarchy. Key features include clear information density, modular panels, and interface rhythm. It is suitable for product showcases, admin panels, and analytics experiences."</span>
+<span class="token-key">colors:</span>
+  <span class="token-key">primary:</span> <span class="token-string">"#9FD8BD"</span> <span class="token-color-preview" style="background:#9FD8BD"></span>
+  <span class="token-key">secondary:</span> <span class="token-string">"#E2A356"</span> <span class="token-color-preview" style="background:#E2A356"></span>
+  <span class="token-key">tertiary:</span> <span class="token-string">"#A3D1DF"</span> <span class="token-color-preview" style="background:#A3D1DF"></span>
+  <span class="token-key">neutral:</span> <span class="token-string">"#93A096"</span> <span class="token-color-preview" style="background:#93A096"></span>
+  <span class="token-key">background:</span> <span class="token-string">"#080C0B"</span> <span class="token-color-preview" style="background:#080C0B"></span>
+  <span class="token-key">surface:</span> <span class="token-string">"#EEEAE0"</span> <span class="token-color-preview" style="background:#EEEAE0"></span>
+  <span class="token-key">text-primary:</span> <span class="token-string">"#EEEAE0"</span>
+  <span class="token-key">text-secondary:</span> <span class="token-string">"#93A096"</span>
+  <span class="token-key">border:</span> <span class="token-string">"#1E2A24"</span>
+  <span class="token-key">accent:</span> <span class="token-string">"#9FD8BD"</span>
+<span class="token-key">typography:</span>
+  <span class="token-key">display-lg:</span>
+    <span class="token-key">fontFamily:</span> <span class="token-string">"Bricolage Grotesque"</span>
+    <span class="token-key">fontSize:</span> <span class="token-string">"107.122px"</span>
+    <span class="token-key">fontWeight:</span> <span class="token-number">230</span>
+    <span class="token-key">lineHeight:</span> <span class="token-string">"104.98px"</span>
+    <span class="token-key">letterSpacing:</span> <span class="token-string">"-0.035em"</span>
+  <span class="token-key">body-md:</span>
+    <span class="token-key">fontFamily:</span> <span class="token-string">"Instrument Sans"</span>
+    <span class="token-key">fontSize:</span> <span class="token-string">"12.8px"</span>
+    <span class="token-key">fontWeight:</span> <span class="token-number">400</span>
+    <span class="token-key">lineHeight:</span> <span class="token-string">"19.2px"</span>
+  <span class="token-key">label-md:</span>
+    <span class="token-key">fontFamily:</span> <span class="token-string">"Instrument Sans"</span>
+    <span class="token-key">fontSize:</span> <span class="token-string">"14.4px"</span>
+    <span class="token-key">fontWeight:</span> <span class="token-number">500</span>
+    <span class="token-key">lineHeight:</span> <span class="token-string">"22.32px"</span>
+<span class="token-key">spacing:</span>
+  <span class="token-key">base:</span> <span class="token-string">"4px"</span>
+  <span class="token-key">scale:</span>
+    <span class="token-key">step-1:</span> <span class="token-string">"4px"</span>
+    <span class="token-key">step-2:</span> <span class="token-string">"4.8px"</span>
+    <span class="token-key">step-3:</span> <span class="token-string">"5.6px"</span>
+    <span class="token-key">step-4:</span> <span class="token-string">"6.43px"</span>
+<span class="token-key">radii:</span>
+  <span class="token-key">sm:</span> <span class="token-string">"4px"</span>
+  <span class="token-key">md:</span> <span class="token-string">"9px"</span>
+  <span class="token-key">pill:</span> <span class="token-string">"999px"</span>
+<span class="token-key">webgl_system:</span>
+  <span class="token-key">renderer:</span> <span class="token-string">"Three.js WebGLRenderer"</span>
+  <span class="token-key">camera_fov:</span> <span class="token-number">58</span>
+  <span class="token-key">primitives:</span> <span class="token-string">"Procedural wireframe contour terrain lines"</span>
+  <span class="token-key">lighting:</span> <span class="token-string">"Ambient (#0c2b26) + Key rim light (#9fd8bd)"</span>
+  <span class="token-key">motion:</span> <span class="token-string">"Pointer parallax + smooth noise elevation morph"</span>
+<span class="token-frontmatter">---</span>
+
+<span class="token-heading"># Nexus — Volumetric Interfaces Design System</span>
+
+<span class="token-comment">## Strategic Principles</span>
+1. <span class="token-string">Volumetric Density:</span> Information hierarchy structured with modular panels.
+2. <span class="token-string">Procedural Aesthetics:</span> Real-time WebGL landscape conveying generative fidelity.
+3. <span class="token-string">Color Harmony:</span> Mint `#9FD8BD` on deep obsidian surfaces.
+4. <span class="token-string">Micro-Rhythm:</span> Ultra-light display headings paired with technical telemetry monospaces.</code></pre>
+
+            <!-- Hidden Raw Text for Clipboard Copy -->
+            <pre id="raw-design-code" style="display: none;">---
+version: "alpha"
+name: "Nexus — Volumetric Interfaces"
+description: "Nexus Volumetric Dashboard Section is designed for demonstrating application workflows and interface hierarchy. Key features include clear information density, modular panels, and interface rhythm. It is suitable for product showcases, admin panels, and analytics experiences."
+colors:
+  primary: "#9FD8BD"
+  secondary: "#E2A356"
+  tertiary: "#A3D1DF"
+  neutral: "#93A096"
+  background: "#080C0B"
+  surface: "#EEEAE0"
+  text-primary: "#EEEAE0"
+  text-secondary: "#93A096"
+  border: "#1E2A24"
+  accent: "#9FD8BD"
+typography:
+  display-lg:
+    fontFamily: "Bricolage Grotesque"
+    fontSize: "107.122px"
+    fontWeight: 230
+    lineHeight: "104.98px"
+    letterSpacing: "-0.035em"
+  body-md:
+    fontFamily: "Instrument Sans"
+    fontSize: "12.8px"
+    fontWeight: 400
+    lineHeight: "19.2px"
+  label-md:
+    fontFamily: "Instrument Sans"
+    fontSize: "14.4px"
+    fontWeight: 500
+    lineHeight: "22.32px"
+spacing:
+  base: "4px"
+  scale:
+    step-1: "4px"
+    step-2: "4.8px"
+    step-3: "5.6px"
+    step-4: "6.43px"
+radii:
+  sm: "4px"
+  md: "9px"
+  pill: "999px"
+webgl_system:
+  renderer: "Three.js WebGLRenderer"
+  camera_fov: 58
+  primitives: "Procedural wireframe contour terrain lines"
+  lighting: "Ambient (#0c2b26) + Key rim light (#9fd8bd)"
+  motion: "Pointer parallax + smooth noise elevation morph"
+---
+
+# Nexus — Volumetric Interfaces Design System
+
+## Strategic Principles
+1. Volumetric Density: Information hierarchy structured with modular panels.
+2. Procedural Aesthetics: Real-time WebGL landscape conveying generative fidelity.
+3. Color Harmony: Mint #9FD8BD on deep obsidian surfaces.
+4. Micro-Rhythm: Ultra-light display headings paired with technical telemetry monospaces.</pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Right Pane: Template Metadata & Action Sidebar -->
+    <aside class="nf-sidebar" aria-label="Template Specifications & Actions">
+      
+      <span class="nf-category-tag">Design System Template</span>
+
+      <h2 class="nf-sidebar-title">Nexus — Volumetric Interfaces</h2>
+
+      <p class="nf-sidebar-desc">
+        Nexus Volumetric Dashboard Section is designed for demonstrating application workflows and interface hierarchy. Key features include clear information density, modular panels, and interface rhythm. It is suitable for product showcases, admin panels, and analytics experiences.
+      </p>
+
+      <!-- Creator Profile Card -->
+      <div class="nf-creator-card">
+        <div class="nf-creator-info">
+          <div class="nf-creator-avatar">S</div>
+          <div class="nf-creator-meta">
+            <span class="nf-creator-handle">@samnang</span>
+            <span class="nf-creator-badge">CREATOR</span>
+          </div>
+        </div>
+
+        <svg class="nf-verified-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </div>
+
+      <!-- Metrics Stats Grid -->
+      <div class="nf-stats-grid">
+        <div class="nf-stat-card">
+          <div class="nf-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            VIEWS
+          </div>
+          <div class="nf-stat-val">440</div>
+        </div>
+
+        <div class="nf-stat-card">
+          <div class="nf-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            FAVORITES
+          </div>
+          <div id="stat-favorites-val" class="nf-stat-val">30</div>
+        </div>
+
+        <div class="nf-stat-card">
+          <div class="nf-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="6" y1="3" x2="6" y2="15"></line>
+              <circle cx="18" cy="6" r="3"></circle>
+              <circle cx="6" cy="18" r="3"></circle>
+              <path d="M18 9a9 9 0 0 1-9 9"></path>
+            </svg>
+            REMIXES
+          </div>
+          <div class="nf-stat-val">5</div>
+        </div>
+      </div>
+
+      <!-- Skills Used -->
+      <div class="nf-skills-section">
+        <div class="nf-section-subtitle">SKILLS USED</div>
+        <div class="nf-skills-list">
+          <span class="nf-skill-pill">CHROMATIC DISPERSION WEBGL SYSTEM</span>
+          <span class="nf-skill-pill">ATMOSPHERIC LASER & WEBGL DESIGN SYSTEM</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="nf-actions-grid">
+        <button id="btn-download-design" class="nf-btn nf-btn-amber" title="Download complete DESIGN.md specification">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          DESIGN.md
+        </button>
+
+        <button id="btn-download-html" class="nf-btn nf-btn-dark" title="Download standalone HTML file">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          HTML
+        </button>
+
+        <button id="btn-favorite" class="nf-btn nf-btn-outline" title="Favorite this template">
+          ☆ Favorite
+        </button>
+
+        <button id="btn-remix" class="nf-btn nf-btn-outline" title="Open remix studio">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          Remix
+        </button>
+      </div>
+
+      <!-- Strategic Overview Accordion -->
+      <div class="nf-overview-card">
+        <div class="nf-overview-header">
+          <h4>Overview</h4>
+          <p>The strategic read of this project page.</p>
+        </div>
+
+        <div class="nf-accordion-list">
+          <div class="nf-accordion-item open">
+            <div class="nf-accordion-summary">
+              <span>Header & Navigation Layout</span>
+              <span>+</span>
+            </div>
+            <div class="nf-accordion-body">
+              Minimalist dark navigation bar with degree brand mark, inline route tabs, and high-contrast pill CTA login trigger.
+            </div>
+          </div>
+
+          <div class="nf-accordion-item">
+            <div class="nf-accordion-summary">
+              <span>Hero & Dynamic Telemetry HUD</span>
+              <span>+</span>
+            </div>
+            <div class="nf-accordion-body">
+              Display typography set in Bricolage Grotesque (weight 230). Floating live telemetry widget tracking SEED, elevation, and real-time coordinates.
+            </div>
+          </div>
+
+          <div class="nf-accordion-item">
+            <div class="nf-accordion-summary">
+              <span>Mesh Contours & Shader Topology</span>
+              <span>+</span>
+            </div>
+            <div class="nf-accordion-body">
+              Procedural Simplex noise displacement generating isometric mountain elevations with glowing mint (#9FD8BD) contour line slicing.
+            </div>
+          </div>
+
+          <div class="nf-accordion-item">
+            <div class="nf-accordion-summary">
+              <span>Design System Tokens & Scales</span>
+              <span>+</span>
+            </div>
+            <div class="nf-accordion-body">
+              Strict 4px base spacing rhythm, responsive clamp typography, and cohesive amber (#E2A356) and soft mint (#9FD8BD) contrast tokens.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- Interactive Remix Modal Dialog -->
+  <div id="remix-modal" class="nf-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="nf-modal">
+      <div class="nf-modal-header">
+        <h3 class="nf-modal-title">Remix Template</h3>
+        <button id="close-modal-btn" class="nf-modal-close" title="Close dialog">✕</button>
+      </div>
+      <p style="font-size:13px; color:#9aa8a1; margin:0;">
+        Describe adjustments to the volumetric interface, terrain algorithm, or color tokens:
+      </p>
+      <textarea id="remix-prompt" class="nf-modal-prompt" placeholder="e.g. Increase mountain jaggedness, change contour color to cyan, add fog depth..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button onclick="document.getElementById('remix-modal').classList.remove('open')" class="nf-btn nf-btn-dark">Cancel</button>
+        <button id="submit-remix-btn" class="nf-btn nf-btn-amber">Generate Remix</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/landscape.js?v=2"></script>
+  <script src="js/telemetry.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
+</body>
+</html>

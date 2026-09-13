@@ -1,0 +1,92 @@
+/* Syntax Highlighting for DESIGN.md Code Viewer */
+.code-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #0d1110;
+  color: #c9d1d9;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow: auto;
+  padding: 24px 28px;
+  box-sizing: border-box;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #eeeae0;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.code-copy-btn.copied {
+  background: rgba(159, 216, 189, 0.2);
+  border-color: #9fd8bd;
+  color: #9fd8bd;
+}
+
+.token-comment {
+  color: #5c6c64;
+  font-style: italic;
+}
+
+.token-frontmatter {
+  color: #79c0ff;
+  font-weight: 600;
+}
+
+.token-key {
+  color: #e2a356;
+}
+
+.token-string {
+  color: #9fd8bd;
+}
+
+.token-number {
+  color: #79c0ff;
+}
+
+.token-boolean {
+  color: #ff7b72;
+}
+
+.token-color-preview {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.token-heading {
+  color: #ffffff;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+  margin-top: 16px;
+  display: block;
+}
